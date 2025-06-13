@@ -8,14 +8,6 @@ import AppMenu from '@/components/AppMenu.vue'
       <AppMenu />
     </nav>
     <main class="main">
-      <div class="header">
-        <div class="header__title">
-          <slot name="title"></slot>
-        </div>
-        <div class="header__controls">
-          <slot name="controls"></slot>
-        </div>
-      </div>
       <div class="content">
         <slot name="content"></slot>
       </div>
@@ -40,20 +32,5 @@ import AppMenu from '@/components/AppMenu.vue'
   flex: 1;
   padding: 16px;
   min-height: 100vh;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.header__title {
-  font-size: 30px;
-  color: $orange;
-  cursor: pointer;
-  &:hover {
-    color: darken($orange, 20%);
-  }
 }
 </style>

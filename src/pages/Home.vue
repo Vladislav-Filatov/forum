@@ -1,74 +1,83 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue'
 import AppButton from '@/components/AppButton.vue'
+import Header from '@/components/Header.vue'
 import { ref, onMounted } from 'vue'
 import { InfoService } from '@/services'
 import { useRouter, useRoute } from 'vue-router'
 import { ROUTER_PATHS } from '@/constants'
+import { graphqlService } from '@/services'
 
-const info = ref()
-
-const fetchInfo = async () => {
-  try {
-    info.value = await InfoService.getByName()
-    console.log('Полученные данные:', info.value)
-  } catch (error) {
-    console.log('не получилось', error)
-  }
+type Post = {
+  id: string
+  title: string
+  text: string
+  createdAt: string
 }
 
-onMounted(fetchInfo)
+type Board = {
+  id: string
+  name: string
+}
+
+const posts = ref<Post[]>([])
+const board = ref<Board>()
+const isLoading = ref<boolean>(false)
+
+const init = async () => {
+  isLoading.value = false
+  posts.value = await graphqlService.getPosts('1')
+  board.value = await graphqlService.getBoards('1')
+  console.log(posts.value)
+  isLoading.value = true
+}
+
+init()
 </script>
 
 <template>
-  <AppLayout>
-    <template #title> Название доски </template>
-    <template #controls>
-      <router-link :to="ROUTER_PATHS.TREAD">
-        <AppButton text="Добавить тред" />
-      </router-link>
-    </template>
-    <template #content>
-      <div v-if="info?.data" class="dragons-grid">
-        <div v-for="dragon in info.data" :key="dragon.id" class="dragon-card">
-          <div class="dragon-image" v-if="dragon.flickr_images?.length">
-            <img :src="dragon.flickr_images[0]" :alt="dragon.name" />
-          </div>
-          <div class="dragon-info">
-            <h2>{{ dragon.name }}</h2>
-            <p class="description">{{ dragon.description }}</p>
-
-            <div class="specs">
-              <div class="spec-item">
-                <span class="label">Тип:</span>
-                <span class="value">{{ dragon.type }}</span>
-              </div>
-              <div class="spec-item">
-                <span class="label">Экипаж:</span>
-                <span class="value">{{ dragon.crew_capacity }} человек</span>
-              </div>
-              <div class="spec-item">
-                <span class="label">Масса:</span>
-                <span class="value">{{ dragon.dry_mass_kg }} кг</span>
-              </div>
-              <div class="spec-item">
-                <span class="label">Первый полет:</span>
-                <span class="value">{{ new Date(dragon.first_flight).toLocaleDateString() }}</span>
-              </div>
-            </div>
-
-            <div class="links">
-              <a :href="dragon.wikipedia" target="_blank" class="wiki-link">Wikipedia</a>
-            </div>
-          </div>
-        </div>
+  <div>
+    <Header>
+      <template #title> {{ board?.name }} </template>
+      <template #controls>
+        <router-link :to="{ path: ROUTER_PATHS.TREAD.replace(':id', board?.id || '') }">
+          <AppButton text="Добавить тред" />
+        </router-link>
+      </template>
+    </Header>
+    <div v-if="isLoading" class="posts-grid">
+      <div v-for="post in posts" :key="post.id" class="post-card">
+        <h2>{{ post.title }}</h2>
+        <p>{{ post.text }}</p>
+        <div class="created-at">{{ new Date(post.createdAt).toLocaleString() }}</div>
+        <!-- momentjs -->
       </div>
-      <div v-else class="loading">Загрузка данных...</div>
-    </template>
-  </AppLayout>
+    </div>
+    <div v-else class="loading">Загрузка постов...</div>
+  </div>
 </template>
 
 <style scoped>
+.posts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  padding: 1rem;
+}
+
+.post-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.created-at {
+  color: #888;
+  font-size: 0.85rem;
+  margin-top: 1rem;
+}
 .dragons-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -86,6 +95,7 @@ onMounted(fetchInfo)
 
 .dragon-card:hover {
   transform: translateY(-5px);
+  cursor: pointer;
 }
 
 .dragon-image {

@@ -17,13 +17,13 @@ const isPathActive = (path: string) => {
       <img class="menu__header-pic" src="@/assets/images/4032679.png" alt="logo" />
       <p class="menu__header-title">Форум со шменявками</p>
     </div>
-    <el-menu :router="true" class="menu__el">
+    <el-menu :default-openeds="['1']" :router="true" class="menu__el">
       <el-sub-menu index="1">
         <template #title>
           <el-icon><Files /></el-icon>
           <span>Доски</span>
         </template>
-        <el-menu-item-group title="Group One">
+        <el-menu-item-group title="Космос">
           <el-menu-item
             :index="ROUTER_PATHS.HOME"
             :class="['item', isPathActive(ROUTER_PATHS.HOME) && 'active']"
@@ -35,7 +35,7 @@ const isPathActive = (path: string) => {
             >Доска 2</el-menu-item
           >
         </el-menu-item-group>
-        <el-menu-item-group title="Group Two">
+        <el-menu-item-group title="Всякое">
           <el-menu-item index="1-3" :class="['item']">Доска 3</el-menu-item>
         </el-menu-item-group>
       </el-sub-menu>
