@@ -6,16 +6,20 @@ import { ROUTER_PATHS } from '@/constants'
 const router = useRouter()
 const route = useRoute()
 
-const isPathActive = (path: string) => {
-  return route.path === path
+const isPathActive = (boardId: string) => {
+  return route.params.id === boardId
+}
+
+const navigateToBoard = (boardId: string) => {
+  router.push(`/board/${boardId}`)
 }
 </script>
 
 <template>
   <div class="menu">
     <div class="menu__header">
-      <img class="menu__header-pic" src="@/assets/images/4032679.png" alt="logo" />
-      <p class="menu__header-title">Форум со шменявками</p>
+      <img class="menu__header-pic" src="@/assets/images/kfu.png" alt="logo" />
+      <p class="menu__header-title">KFUch</p>
     </div>
     <el-menu :default-openeds="['1']" :router="true" class="menu__el">
       <el-sub-menu index="1">
@@ -26,17 +30,24 @@ const isPathActive = (path: string) => {
         <el-menu-item-group title="Космос">
           <el-menu-item
             :index="ROUTER_PATHS.HOME"
-            :class="['item', isPathActive(ROUTER_PATHS.HOME) && 'active']"
+            :class="['item', isPathActive('1') && 'active']"
+            @click="navigateToBoard('1')"
             >Доска 1</el-menu-item
           >
           <el-menu-item
-            :index="ROUTER_PATHS.BOARD1"
-            :class="['item', isPathActive(ROUTER_PATHS.BOARD1) && 'active']"
+            :index="ROUTER_PATHS.BOARD"
+            :class="['item', isPathActive('2') && 'active']"
+            @click="navigateToBoard('2')"
             >Доска 2</el-menu-item
           >
         </el-menu-item-group>
         <el-menu-item-group title="Всякое">
-          <el-menu-item index="1-3" :class="['item']">Доска 3</el-menu-item>
+          <el-menu-item
+            :index="ROUTER_PATHS.BOARD"
+            :class="['item', isPathActive('3') && 'active']"
+            @click="navigateToBoard('3')"
+            >Доска 3</el-menu-item
+          >
         </el-menu-item-group>
       </el-sub-menu>
     </el-menu>
@@ -71,8 +82,8 @@ const isPathActive = (path: string) => {
 }
 
 .menu__header-pic {
-  width: 32px;
-  height: 32px;
+  width: 50px;
+  height: 50px;
 }
 
 .menu__el {
@@ -81,9 +92,9 @@ const isPathActive = (path: string) => {
 }
 
 .menu__header-title {
-  font-size: 16px;
+  font-size: 24px;
   color: $orange;
-  width: 115px;
+  width: 90px;
 }
 
 .menu__header {

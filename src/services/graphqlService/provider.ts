@@ -55,6 +55,16 @@ export async function createPost(input: {
   return data.createPost
 }
 
+export async function deletePost(postId: string) {
+  const mutation = `
+    mutation DeletePost($id: ID!) {
+      deletePost(id: $id)
+    }
+  `
+  const data = await graphqlRequest(mutation, { id: postId })
+  return data.deletePost
+}
+
 export async function getBoards(boardId: string) {
   const query = `
     query GetBoards($id: ID!) {
@@ -66,6 +76,48 @@ export async function getBoards(boardId: string) {
   `
   const data = await graphqlRequest(query, { id: boardId })
   return data.board
+}
+
+export async function getComments(postId: string) {
+  const query = `
+    query GetComments($postId: ID!) {
+      comments(postId: $postId) {
+        id
+        text
+        hashIp
+        createdAt
+        deletedAt
+      }
+    }
+  `
+
+  const data = await graphqlRequest(query, { postId })
+  return data.comments
+}
+
+export async function createComment(input: { postId: string; text: string; hashIp: string }) {
+  const mutation = `
+    mutation CreateComment($input: CreateCommentInput!) {
+      createComment(input: $input) {
+        id
+        text
+        hashIp
+        createdAt
+      }
+    }
+  `
+  const data = await graphqlRequest(mutation, { input })
+  return data.createComment
+}
+
+export async function deleteComment(commentId: string) {
+  const mutation = `
+    mutation DeleteComment($id: ID!) {
+      deleteComment(id: $id)
+    }
+  `
+  const data = await graphqlRequest(mutation, { id: commentId })
+  return data.deleteComment
 }
 
 // const variables = {

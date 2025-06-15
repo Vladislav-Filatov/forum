@@ -2,22 +2,11 @@
 import AppLayout from '@/layouts/AppLayout.vue'
 import AppButton from '@/components/AppButton.vue'
 import Header from '@/components/Header.vue'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { InfoService } from '@/services'
 import { useRouter, useRoute } from 'vue-router'
 import { ROUTER_PATHS } from '@/constants'
 import { graphqlService } from '@/services'
-
-const info = ref()
-
-const fetchInfo = async () => {
-  try {
-    info.value = await InfoService.getByName()
-    console.log('Полученные данные:', info.value)
-  } catch (error) {
-    console.log('не получилось', error)
-  }
-}
 
 type Post = {
   id: string
@@ -31,6 +20,19 @@ type Board = {
   name: string
 }
 
+type Comment = {
+  id: string
+  text: string
+  hashIp: string
+  createdAt: string
+  deletedAt: string
+  post: {
+    id: string
+  }
+}
+
+const route = useRoute()
+const router = useRouter()
 const posts = ref<Post[]>([])
 const board = ref<Board>()
 const isLoading = ref<boolean>(false)

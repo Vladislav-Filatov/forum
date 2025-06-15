@@ -45,6 +45,10 @@ const submitPost = async () => {
     form.value.title = ''
     form.value.content = ''
     form.value.image = ''
+    router.push({
+      path: `/board/${boardId}`,
+      query: { refresh: Date.now() },
+    })
   } catch (e: any) {
     error.value = e.message || 'Ошибка при создании поста'
   } finally {
@@ -95,9 +99,7 @@ const submitPost = async () => {
       </el-form-item>
 
       <div class="form-accept">
-        <!-- <router-link :to="отправлять данные на сервак"> -->
-        <button type="submit" @click="goBack">Сохранить</button>
-        <!-- </router-link> -->
+        <button class="submit-button" type="submit">Сохранить</button>
       </div>
     </el-form>
   </div>
@@ -137,5 +139,18 @@ const submitPost = async () => {
 
 .form__header-input {
   margin-bottom: 20px;
+}
+
+.submit-button {
+  background-color: $orange;
+  padding: 12px 20px;
+  border: none;
+  font-size: 15px;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  &:hover {
+    background-color: darken($orange, 25%);
+  }
 }
 </style>

@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue'
 import AppButton from '@/components/AppButton.vue'
 import Header from '@/components/Header.vue'
-import { ref, onMounted } from 'vue'
-import { InfoService } from '@/services'
+import { ref, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ROUTER_PATHS } from '@/constants'
 import { graphqlService } from '@/services'
+import { ElMessageBox } from 'element-plus'
 
 type Post = {
   id: string
@@ -20,17 +19,94 @@ type Board = {
   name: string
 }
 
+type Comment = {
+  id: string
+  text: string
+  hashIp: string
+  createdAt: string
+  deletedAt: string
+  post: {
+    id: string
+  }
+}
+
+const route = useRoute()
+const router = useRouter()
 const posts = ref<Post[]>([])
 const board = ref<Board>()
 const isLoading = ref<boolean>(false)
+const postComments = ref<Record<string, Comment[]>>({})
+const newComments = ref<Record<string, string>>({})
+
+const handleAddComment = async (postId: string) => {
+  if (!newComments.value[postId]?.trim()) return
+  try {
+    const comment = await graphqlService.createComment({
+      postId,
+      text: newComments.value[postId],
+      hashIp: 'User123',
+    })
+
+    if (!postComments.value[postId]) {
+      postComments.value[postId] = []
+    }
+    postComments.value[postId].push(comment)
+    newComments.value[postId] = ''
+  } catch (error) {
+    console.error('Ошибка при создании комментария:', error)
+  }
+}
+
+const handleDeleteComment = async (postId: string, commentId: string) => {
+  try {
+    await graphqlService.deleteComment(commentId)
+    postComments.value[postId] = postComments.value[postId].filter(
+      (comment) => comment.id !== commentId,
+    )
+  } catch (error) {
+    console.error('Ошибка при удалении комментария:', error)
+  }
+}
+
+const handleDeletePost = async (postId: string) => {
+  try {
+    await ElMessageBox.confirm(
+      'Вы уверены, что хотите удалить этот пост? Это действие нельзя отменить.',
+      'Подтверждение удаления',
+      {
+        confirmButtonText: 'Удалить',
+        cancelButtonText: 'Отмена',
+        type: 'warning',
+      },
+    )
+    await graphqlService.deletePost(postId)
+    posts.value = posts.value.filter((post) => post.id !== postId)
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('Ошибка при удалении поста:', error)
+    }
+  }
+}
 
 const init = async () => {
   isLoading.value = false
-  posts.value = await graphqlService.getPosts('1')
-  board.value = await graphqlService.getBoards('1')
-  console.log(posts.value)
+  const boardId = (route.params.id as string) || '1'
+  posts.value = await graphqlService.getPosts(boardId)
+  board.value = await graphqlService.getBoards(boardId)
+  for (const post of posts.value) {
+    newComments.value[post.id] = ''
+    const comments = await graphqlService.getComments(post.id)
+    postComments.value[post.id] = comments
+  }
   isLoading.value = true
 }
+
+watch(
+  () => route.params.id,
+  () => {
+    init()
+  },
+)
 
 init()
 </script>
@@ -46,123 +122,99 @@ init()
       </template>
     </Header>
     <div v-if="isLoading" class="posts-grid">
-      <div v-for="post in posts" :key="post.id" class="post-card">
-        <h2>{{ post.title }}</h2>
-        <p>{{ post.text }}</p>
-        <div class="created-at">{{ new Date(post.createdAt).toLocaleString() }}</div>
+      <div v-for="post in posts" :key="post.id" class="post">
+        <el-button
+          class="post__delete-button"
+          type="danger"
+          size="small"
+          @click="handleDeletePost(post.id)"
+        >
+          Удалить пост
+        </el-button>
+        <h2 class="post__title">{{ post.title }}</h2>
+        <p class="post__text">{{ post.text }}</p>
+        <p class="post__created-at">{{ new Date(post.createdAt).toLocaleString() }}</p>
         <!-- momentjs -->
+        <div class="comments">
+          <h3>Комментарии</h3>
+          <div v-if="postComments[post.id]?.length > 0" class="comments__list">
+            <div v-for="comment in postComments[post.id]" :key="comment.id" class="comment">
+              <p class="comment__text">{{ comment.text }}</p>
+              <div class="comment__meta">
+                <span>{{ new Date(comment.createdAt).toLocaleString() }}</span>
+                <el-icon
+                  class="comment__delete-button"
+                  @click="handleDeleteComment(post.id, comment.id)"
+                >
+                  <Delete />
+                </el-icon>
+              </div>
+            </div>
+          </div>
+          <div v-else class="no-comments">Нет комментариев</div>
+          <div class="add-comment">
+            <el-input
+              v-model="newComments[post.id]"
+              type="textarea"
+              :rows="2"
+              placeholder="Добавить комментарий..."
+            />
+            <AppButton
+              class="submit-button"
+              type="primary"
+              text="Отправить"
+              @click="handleAddComment(post.id)"
+              :disabled="!newComments[post.id].trim()"
+            >
+            </AppButton>
+          </div>
+        </div>
       </div>
     </div>
     <div v-else class="loading">Загрузка постов...</div>
   </div>
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
+@import '@/assets/styles/index.scss';
+
 .posts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(700px, 1fr));
   gap: 2rem;
   padding: 1rem;
 }
 
-.post-card {
+.post {
   background: white;
   border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 7px 4px 6px 10px rgba(0, 0, 0, 0.1);
   padding: 1.5rem;
   margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
 }
 
-.created-at {
+.post__delete-button {
+  align-self: flex-end;
+  padding: 15px 10px;
+}
+.post__title {
+  display: flex;
+  justify-content: center;
+}
+
+.post__text {
+  display: flex;
+  justify-content: center;
+}
+
+.post__created-at {
   color: #888;
   font-size: 0.85rem;
   margin-top: 1rem;
-}
-.dragons-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-  padding: 1rem;
-}
-
-.dragon-card {
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s;
-}
-
-.dragon-card:hover {
-  transform: translateY(-5px);
-  cursor: pointer;
-}
-
-.dragon-image {
-  width: 100%;
-  height: 200px;
-  overflow: hidden;
-}
-
-.dragon-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.dragon-info {
-  padding: 1.5rem;
-}
-
-.dragon-info h2 {
-  margin: 0 0 1rem 0;
-  color: #333;
-  font-size: 1.5rem;
-}
-
-.description {
-  color: #666;
-  font-size: 0.9rem;
-  margin-bottom: 1.5rem;
-  line-height: 1.5;
-}
-
-.specs {
-  display: grid;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.spec-item {
   display: flex;
-  justify-content: space-between;
-  padding: 0.5rem;
-  background: #f5f5f5;
-  border-radius: 4px;
-}
-
-.label {
-  font-weight: bold;
-  color: #555;
-}
-
-.value {
-  color: #333;
-}
-
-.links {
-  display: flex;
-  gap: 1rem;
-}
-
-.wiki-link {
-  color: #0066cc;
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.wiki-link:hover {
-  text-decoration: underline;
+  justify-content: flex-end;
 }
 
 .loading {
@@ -170,5 +222,66 @@ init()
   padding: 2rem;
   color: #666;
   font-style: italic;
+}
+
+.comments {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+}
+
+.comments h3 {
+  font-size: 1.1rem;
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+.comments__list {
+  margin-bottom: 1rem;
+}
+
+.comment {
+  background: #eff0f4;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 0.8rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.comment__text {
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.comment__meta {
+  margin-top: 0;
+  font-size: 13px;
+  color: #888;
+  display: flex;
+  justify-content: space-between;
+}
+
+.comment__delete-button {
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+}
+
+.no-comments {
+  color: #888;
+  font-style: italic;
+  margin-bottom: 1rem;
+}
+
+.add-comment {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.submit-button {
+  align-self: flex-end;
 }
 </style>
