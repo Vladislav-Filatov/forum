@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ROUTER_PATHS } from '@/constants'
 
@@ -18,18 +17,18 @@ const navigateToBoard = (boardId: string) => {
 <template>
   <div class="menu">
     <div class="menu__header">
-      <img class="menu__header-pic" src="@/assets/images/kfu.png" alt="logo" />
+      <img class="menu__header-pic" src="@/assets/images/logo-KFU.png" alt="logo" />
       <p class="menu__header-title">KFUch</p>
     </div>
-    <el-menu :default-openeds="['1']" :router="true" class="menu__el">
+    <el-menu :default-openeds="['1']" :router="true" class="menu__big-element">
       <el-sub-menu index="1">
         <template #title>
           <el-icon><Files /></el-icon>
           <span>Доски</span>
         </template>
-        <el-menu-item-group title="Космос">
+        <el-menu-item-group class="menu__small-element" title="Разное">
           <el-menu-item
-            :index="ROUTER_PATHS.HOME"
+            :index="ROUTER_PATHS.BOARD"
             :class="['item', isPathActive('1') && 'active']"
             @click="navigateToBoard('1')"
             >Доска 1</el-menu-item
@@ -41,7 +40,7 @@ const navigateToBoard = (boardId: string) => {
             >Доска 2</el-menu-item
           >
         </el-menu-item-group>
-        <el-menu-item-group title="Всякое">
+        <el-menu-item-group title="Всякое" class="menu__big-element">
           <el-menu-item
             :index="ROUTER_PATHS.BOARD"
             :class="['item', isPathActive('3') && 'active']"
@@ -51,13 +50,13 @@ const navigateToBoard = (boardId: string) => {
         </el-menu-item-group>
       </el-sub-menu>
     </el-menu>
-    <el-menu class="menu__el">
+    <el-menu class="menu__big-element">
       <el-sub-menu index="1">
         <template #title>
           <el-icon><User /></el-icon>
           <span>Обратная связь</span>
         </template>
-        <el-menu-item-group title="Telegram">
+        <el-menu-item-group class="menu__small-element" title="Telegram">
           <el-menu-item index="1-1"
             ><a class="contact" href="https://t.me/Vllad_Filatov">Влад</a></el-menu-item
           >
@@ -82,13 +81,19 @@ const navigateToBoard = (boardId: string) => {
 }
 
 .menu__header-pic {
-  width: 50px;
-  height: 50px;
+  width: 70px;
+  height: 55px;
+  margin-left: 0;
 }
 
-.menu__el {
+.menu__big-element {
   border: none;
   font-size: 10px;
+  background-color: #e9ecee;
+}
+
+.menu__small-element {
+  background-color: #e9ecee;
 }
 
 .menu__header-title {
@@ -113,7 +118,7 @@ const navigateToBoard = (boardId: string) => {
   color: $orange;
 
   &.active {
-    color: darken($orange, 20%);
+    color: darken($orange, 25%);
   }
 }
 </style>

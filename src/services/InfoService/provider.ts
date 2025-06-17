@@ -1,8 +1,7 @@
-import axios from "axios";
-import { URL_BY_LETTER } from "@/constants";
+// import axios from 'axios'
 
-export const getByName = async() => {
-  const data = await axios.get(URL_BY_LETTER);
+// export const getByName = async () => {
+//   const data = await axios.get(URL_BY_LETTER)
 
-  return data;
-}
+//   return data
+// }

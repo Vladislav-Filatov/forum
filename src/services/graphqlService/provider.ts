@@ -1,6 +1,4 @@
-import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client/core'
 import { RADMIR_INFO } from '@/constants/api'
-import { gql } from '@apollo/client/core'
 
 async function graphqlRequest(query: string, variables: Record<string, any>) {
   const response = await fetch(RADMIR_INFO, {

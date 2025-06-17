@@ -31,7 +31,6 @@ type Comment = {
 }
 
 const route = useRoute()
-const router = useRouter()
 const posts = ref<Post[]>([])
 const board = ref<Board>()
 const isLoading = ref<boolean>(false)
@@ -39,7 +38,7 @@ const postComments = ref<Record<string, Comment[]>>({})
 const newComments = ref<Record<string, string>>({})
 
 const handleAddComment = async (postId: string) => {
-  if (!newComments.value[postId]?.trim()) return
+  if (!newComments.value[postId]) return
   try {
     const comment = await graphqlService.createComment({
       postId,
@@ -164,7 +163,7 @@ init()
               type="primary"
               text="Отправить"
               @click="handleAddComment(post.id)"
-              :disabled="!newComments[post.id].trim()"
+              :disabled="!newComments[post.id]"
             >
             </AppButton>
           </div>
@@ -180,7 +179,7 @@ init()
 
 .posts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(700px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(605px, 1fr));
   gap: 2rem;
   padding: 1rem;
 }
@@ -207,6 +206,7 @@ init()
 .post__text {
   display: flex;
   justify-content: center;
+  white-space: pre-wrap;
 }
 
 .post__created-at {

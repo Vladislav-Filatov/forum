@@ -10,9 +10,6 @@ const router = createRouter({
       path: '/board/:id',
       name: 'board',
       component: Home,
-      meta: {
-        title: `Доска`,
-      },
     },
     {
       path: ROUTER_PATHS.TREAD,
@@ -26,7 +23,10 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  const title = to.meta.title as string
+  let title = to.meta.title as string
+  if (to.name === 'board' && to.params.id) {
+    title = `Доска ${to.params.id}`
+  }
   document.title = title
   next()
 })

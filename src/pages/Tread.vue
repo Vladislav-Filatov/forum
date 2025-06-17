@@ -41,7 +41,6 @@ const submitPost = async () => {
       text: form.value.content,
       hashIp: 'localhost',
     })
-    console.log('Пост создан:', newPost)
     form.value.title = ''
     form.value.content = ''
     form.value.image = ''
